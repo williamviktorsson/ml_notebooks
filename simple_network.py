@@ -50,7 +50,11 @@ class SimpleNeuralNetwork:
             Lista med sannolikheter, en per klass
             T.ex. [0.92, 0.15, 0.03] betyder 92% säker på klass 0
         """
-        return [p.predict(inputs) for p in self.perceptrons]
+
+        # TODO: returnera en lista med prediktioner från varje perceptron
+        # loopa alltså över self.perceptrons och anropa predict för varje
+        # returnera desras resultat som en lista
+        return []
 
     def train(self, inputs, targets, epochs=None):
         """
@@ -65,7 +69,7 @@ class SimpleNeuralNetwork:
             # Skapa en lista med facit BARA för denna klass
             # T.ex. för Adelie-perceptronen: [1, 0, 0, 1, 1, 0, ...]
             specific_targets = [target[i] for target in targets]
-            perceptron.fit(inputs, specific_targets)
+            # TODO: träna perceptronen med inputs och sina facit
 
 
 def compute_accuracy(network, inputs, targets):

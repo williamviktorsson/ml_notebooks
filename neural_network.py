@@ -26,7 +26,8 @@ def sigmoid_derivative(sig_output):
     Notera: tar sigmoid-OUTPUT som input, inte x.
     Om sigmoid(x) = s, då är sigmoid'(x) = s * (1 - s)
     """
-    return sig_output * (1 - sig_output)
+    # TODO: returnera derivatan här
+    return 0.0
 
 
 class Neuron:
@@ -57,7 +58,7 @@ class Neuron:
         Returns:
             Sigmoid av viktad summa + bias
         """
-        total = sum(inp * w for inp, w in zip(inputs, self.weights))
+        total = np.dot(self.weights, inputs) # ersätt loop med linjär algebra
         total += self.bias
         return sigmoid(total)
 
@@ -81,7 +82,7 @@ class NeuralNetwork:
                         T.ex. [2, 3, 1] = 2 inputs, 3 dolda, 1 output
         """
         self.layer_sizes = layer_sizes
-        self.layers = []
+        self.layers: list[list[Neuron]] = []
 
         # Skapa neuroner för varje lager (utom input-lagret)
         for i in range(1, len(layer_sizes)):
@@ -102,9 +103,16 @@ class NeuralNetwork:
         """
         current_inputs = inputs
         for layer in self.layers:
-            next_inputs = [neuron.predict(current_inputs) for neuron in layer]
+            # TODO: för varje neuron i detta lager, beräkna dess output
+            # använd current_inputs som input till varje neuron
+            next_inputs = []
+
+            # svaret från detta lager blir input till nästa lager
             current_inputs = next_inputs
-        return current_inputs
+
+        # TODO: returnera output från sista lagret
+        return []
+
 
     def train(self, training_inputs, training_targets, epochs, learning_rate):
         """
@@ -133,11 +141,13 @@ class NeuralNetwork:
         """
         # ===== STEG 1: FORWARD PASS =====
         # Spara outputs från varje lager (behövs för backprop)
-        outputs_by_layer = [inputs]
+        outputs_by_layer = [inputs] # lager 0 är input-lagret 
         current_inputs = inputs
 
         for layer in self.layers:
-            layer_outputs = [neuron.predict(current_inputs) for neuron in layer]
+            # TODO: beräkna output för detta lager,
+            # använd current_inputs som input till varje neuron
+            layer_outputs = [] # denna lista ska alltså inte vara tom
             outputs_by_layer.append(layer_outputs)
             current_inputs = layer_outputs
 
@@ -145,14 +155,16 @@ class NeuralNetwork:
         # Beräkna delta (felansvar) för varje neuron
 
         # A. Delta för OUTPUT-LAGRET
-        final_outputs = outputs_by_layer[-1]
+        final_outputs = outputs_by_layer[-1] # sista lagrets output
         output_deltas = []
 
-        for i, neuron in enumerate(self.layers[-1]):
+        for index,output in enumerate(final_outputs):
             # Felet = Facit - Gissning
-            error = target[i] - final_outputs[i]
-            # Delta = Felet * Derivatan (hur känslig är neuronen?)
-            delta = error * sigmoid_derivative(final_outputs[i])
+            correct_value = target[index]
+            error = 0 # TODO: beräkna felet här
+
+            # Delta = Felet × derivatan_av_sigmoid(Gissning)
+            delta = 0 # TODO: beräkna delta här
             output_deltas.append(delta)
 
         deltas = [output_deltas]
@@ -169,10 +181,16 @@ class NeuralNetwork:
                 # Hur mycket bidrog denna neuron till felen i nästa lager?
                 error_contribution = 0
                 for k, next_neuron in enumerate(next_layer):
+                    # TODO: lägg till bidraget från nästa neurons delta
+                    # multiplicerat med vikten som kopplar dem
+                    # vikten mellan dem hittar du i next_neuron.weights[j]
+                    # deltat för nästa neuron är next_deltas[k]
                     # (Felet hos nästa neuron) * (Vikten som kopplar dem)
-                    error_contribution += next_deltas[k] * next_neuron.weights[j]
+       
+                    error_contribution += 0
 
-                delta = error_contribution * sigmoid_derivative(current_outputs[j])
+                # Delta = Felbidrag × derivatan_av_sigmoid(Gissning)
+                delta = 0 # TODO: beräkna delta här
                 current_deltas.append(delta)
 
             # Lägg till först i listan (vi går baklänges)
@@ -183,11 +201,12 @@ class NeuralNetwork:
             inputs_to_layer = outputs_by_layer[i]
 
             for j, neuron in enumerate(layer):
-                delta = deltas[i][j]
+                delta = deltas[i][j] # delta för denna neuron
 
                 # Uppdatera vikter
                 for k, input_val in enumerate(inputs_to_layer):
-                    neuron.weights[k] += learning_rate * delta * input_val
+                    # Vikt-justering = inlärningsfaktor × delta × input_val
+                    neuron.weights[k] += 0 # TODO: uppdatera vikten här
 
                 # Uppdatera bias
                 neuron.bias += learning_rate * delta

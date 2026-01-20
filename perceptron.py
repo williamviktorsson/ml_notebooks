@@ -45,7 +45,7 @@ class Perceptron(Neuron):
         Tränar Perceptronen genom att iterera över träningsdatan.
 
         Använder perceptron-inlärningsregeln:
-        - ny_vikt = gammal_vikt + α * fel * input
+        - ny_vikt_x = gammal_vikt + α * fel * input_x
         - ny_bias = gammal_bias + α * fel
 
         Args:
@@ -56,22 +56,22 @@ class Perceptron(Neuron):
             # Gå igenom varje exempel och dess facit
             for input_example, target in zip(inputs, targets):
 
-                # STEG 1: Gissa (använd predict från Neuron)
-                prediction = self.predict(input_example)
+                # TODO STEG 1: Gissa (använd predict från Neuron, finns i variabeln self)
 
-                # STEG 2: Beräkna Felet
+                # TODO STEG 2: Beräkna Felet
                 # error = facit - gissning
                 # Kan vara: 0 (rätt), 1 (gissade 0 men skulle vara 1), -1 (gissade 1 men skulle vara 0)
-                error = target - prediction
+                
 
-                # STEG 3: Justera Parametrar (endast om gissningen var fel)
-                if error != 0:
-                    # Justera bias: ny_bias = gammal_bias + α * fel
-                    self.bias += self.learning_rate * error
+                # TODO STEG 3: Justera Parametrar (endast om gissningen var fel)
 
-                    # Justera varje vikt: ny_vikt = gammal_vikt + α * fel * input
-                    for j in range(len(self.weights)):
-                        self.weights[j] += self.learning_rate * error * input_example[j]
+                # Justera bias: ny_bias = gammal_bias + α * fel
+                # TODO
+
+                # Justera varje vikt: ny_vikt_x = gammal_vikt + α * fel * input
+                for x in range(len(self.weights)):
+                    # TODO: uppdatera vikt_x med formeln ovan
+                    print(self.weights[x], input_example[x])
 
 
 class SigmoidPerceptron(Perceptron):
@@ -98,8 +98,9 @@ class SigmoidPerceptron(Perceptron):
             return 0.0
         if value > 700:
             return 1.0
-        return 1 / (1 + math.exp(-value))
-
+        
+        # TODO implementera sigmoid-funktionen här
+        return 0.5
 
 # --- Exempel på användning ---
 if __name__ == "__main__":

@@ -34,10 +34,11 @@ class Neuron:
         Returns:
             1 om value > 0, annars 0
         """
-        if value > 0:
-            return 1
-        else:
-            return 0
+
+        # TODO: implementera stegfunktionen här
+        return 1
+
+       
 
     def predict(self, inputs):
         """
@@ -57,10 +58,10 @@ class Neuron:
         # Loopa igenom varje input och dess motsvarande vikt
         for i in range(len(self.weights)):
             # TODO: för respektive vikt, multiplicera med respektive input
-            summation += inputs[i] * self.weights[i]
+            # TODO: printa inte men du kan testa printa för att inspektera värdena
+            print(self.weights[i], inputs[i])
 
-        # Lägg till bias
-        summation += self.bias
+        # TODO Lägg till bias till summan
 
         return self.activate(summation)
 
