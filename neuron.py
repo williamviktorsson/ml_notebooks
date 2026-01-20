@@ -58,10 +58,11 @@ class Neuron:
         # Loopa igenom varje input och dess motsvarande vikt
         for i in range(len(self.weights)):
             # TODO: för respektive vikt, multiplicera med respektive input
-            # TODO: printa inte men du kan testa printa för att inspektera värdena
-            print(self.weights[i], inputs[i])
-
-        # TODO Lägg till bias till summan
+            # och addera till summation
+            # du behöver self.weights[i], inputs[i]
+            summation += 0  # Ändra detta
+            
+        # TODO addera bias till summan
 
         return self.activate(summation)
 
