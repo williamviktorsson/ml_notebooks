@@ -6,7 +6,9 @@ perceptron som tränas att identifiera just den klassen.
 """
 
 import numpy as np
-from perceptron import Perceptron, SigmoidPerceptron
+
+from perceptron import Perceptron
+from sigmoid_perceptron import SigmoidPerceptron
 
 
 class SimpleNeuralNetwork:

@@ -57,9 +57,11 @@ class Perceptron(Neuron):
             for input_example, target in zip(inputs, targets):
 
                 # TODO STEG 1: Gissa (använd predict från Neuron, finns i variabeln self)
+                # Du behöver använda ditt input_example här
 
                 # TODO STEG 2: Beräkna Felet
                 # error = facit - gissning
+                # variabeln target är facit, gissning är svaret från din prediction
                 # Kan vara: 0 (rätt), 1 (gissade 0 men skulle vara 1), -1 (gissade 1 men skulle vara 0)
                 
 
@@ -69,38 +71,18 @@ class Perceptron(Neuron):
                 # TODO
 
                 # Justera varje vikt: ny_vikt_x = gammal_vikt + α * fel * input
-                for x in range(len(self.weights)):
+                for index in range(len(self.weights)):
                     # TODO: uppdatera vikt_x med formeln ovan
-                    print(self.weights[x], input_example[x])
+                    # index används för att komma åt rätt vikt och input
+                    # du behöver använda self.weights[index] och input_example[index]
+                    # Kom ihåg, respektive vikt representerar hur mycket dess motsvarande
+                    # input påverkar den slutgiltiga gissningen
+                    # Därför för att justera en vikt på ett specifikt index
+                    # i vår lista med vikter, behöver vi kunna komma åt
+                    # både vikten och dess motsvarande input
+                    self.weights[index] += 0  # TODO: uppdatera denna rad
 
 
-class SigmoidPerceptron(Perceptron):
-    """
-    En Perceptron med sigmoid-aktiveringsfunktion istället för stegfunktion.
-
-    Sigmoid ger mjuka sannolikheter (0.0 - 1.0) istället för hårda beslut (0 eller 1).
-    Detta är användbart för att jämföra konfidensen mellan flera klassificerare.
-    """
-
-    def activate(self, value):
-        """
-        Sigmoid-aktiveringsfunktion.
-        Klämmer ihop vilket värde som helst till intervallet (0, 1).
-
-        Args:
-            value: Den viktade summan
-
-        Returns:
-            Ett värde mellan 0 och 1
-        """
-        # Skydd mot overflow
-        if value < -700:
-            return 0.0
-        if value > 700:
-            return 1.0
-        
-        # TODO implementera sigmoid-funktionen här
-        return 0.5
 
 # --- Exempel på användning ---
 if __name__ == "__main__":
