@@ -1,0 +1,177 @@
+---
+title: "Backpropagation"
+format:
+  revealjs:
+    theme: dracula
+    transition: slide
+    background-transition: fade
+    controls: true
+    controls-layout: bottom-right
+    controls-tutorial: true
+    hash-type: number
+    hash: true
+    incremental: true
+    fragment-in-url: true
+    include-in-header: 
+      text: |
+        <style>
+        .center-xy {
+            margin: 0;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
+        </style>
+---
+
+## Vad vi sa tidigare
+
+> "Vi multiplicerar med derivatan för att justera de *osäkra* neuronerna mer"
+
+- En förenkling. Sant, men bara en del av sanningen.
+- Låt oss prata om vad som verkligen händer.
+
+---
+
+## En bättre bild
+
+- Målet är att ta reda på: **i vilken riktning ändras nätverkets fel om vi justerar vikterna?**
+
+- För varje neuron behöver vi veta:
+
+  - Hur fel är neuronen? (**error**)
+  - Hur mycket kommer felet **förändras** om vi justerar dess vikter? (**derivata**)
+
+- Det räcker inte att veta att en neuron har fel — vi måste veta om den **lyssnar** på våra justeringar.
+
+---
+
+## Delta = Fel × Lyssningsförmåga
+
+- Det är ingen idé att "tjata" på neuroner som ändå inte kan ändra sig.
+
+- Och ja — "osäkra" neuroner (nära 0.5) råkar vara de mest responsiva!
+
+---
+
+## Därför heter det Backpropagation
+
+1. Vi beräknar **felet** i output-lagret (en gång!)
+2. Vi **propagerar deltas bakåt** genom nätverket
+3. Varje lager använder sitt delta för att uppdatera sina vikter
+
+. . .
+
+```
+Output:  delta = error × derivata
+Hidden:  delta = (vikter × tidigare_delta) × derivata
+Uppdatering: vikt += learning_rate × delta × input
+```
+
+---
+
+## Kedjeregeln
+
+- Varför fungerar det att multiplicera deltas bakåt?
+
+- **Kedjeregeln** säger att derivatan av en sammansatt funktion är produkten av varje steg:
+  - om `h(x) = f(g(x))` är `h´(x) = f'(g(x)) * g'(x)`
+
+. . .
+
+```
+vikt → viktad_summa → sigmoid → output → fel
+         ↓              ↓          ↓
+      derivata₁     derivata₂   derivata₃
+```
+
+- Total gradient = derivata₁ × derivata₂ × derivata₃
+
+---
+
+## Gradient Descent
+
+- Vi vet bara: *just här, just nu, lutar nätverkets fel-beräkning åt det här hållet.*
+
+- Så vi tar ett litet steg i den riktningen och hoppas på det bästa.
+
+---
+
+## Vanishing Gradient
+
+- Med sigmoid krymper delta för varje lager bakåt:
+
+. . .
+
+```
+Lager 4: delta = 0.1
+Lager 3: delta = 0.025   (× ~0.25)
+Lager 2: delta = 0.006   (× ~0.25)
+Lager 1: delta = 0.0015  (× ~0.25)
+```
+
+- De första lagren lär sig knappt! Derivatan "stryper" signalen.
+
+---
+
+### Förlust (loss)
+
+- Hittills har jag pratat om att beräkna ett fel. En error.
+- När vi beräknar nätverkets prestanda brukar vi prata om en "förlustfunktion", "loss function" eller "cost function".
+- Det är en funktion som tar nätverkets output och mål (target) och ger oss ett enda tal som representerar hur "dåligt" nätverket presterar.
+- Det är den här förlusten vi vill minimera när vi tränar nätverket.
+
+---
+
+### MSE
+
+- MSE står för "Mean Squared Error" och är en vanlig förlustfunktion.
+  - För varje error, kvadrerar vi det (för att straffa större fel mer) och tar sedan genomsnittet över alla exempel.
+  - Funktionen ser ut såhär: 
+    - `MSE = (1/n) * Σ(target - output)²`
+- När vi beräknar `error = target - output` — det är derivatan av **MSE**.
+  - Det är alltså första steget i att beräkna `∂loss / ∂weight`!
+
+---
+
+## Olika aktiveringsfunktioner
+
+| Funktion | Fördel | Nackdel |
+|----------|--------|---------|
+| **Sigmoid** | Enkel att förstå | Vanishing gradient |
+| **ReLU** | Derivata = 1 | "Döda" neuroner |
+| **Leaky ReLU** | Undviker döda neuroner | — |
+| **GELU** | Smooth | Används i transformers |
+| **Softmax** | Alla output summerar till 1 | — |
+
+- Modern praxis: **ReLU** i dolda lager, **Sigmoid/Softmax** i output.
+
+---
+
+## Olika learning rate-strategier
+
+- Vår learning rate är **statisk** — samma värde hela träningen.
+
+- Professionella verktyg använder **adaptiva** metoder:
+
+. . .
+
+| Metod | Idé |
+|-------|-----|
+| **Momentum** | "Rulla nedför backen" med fart |
+| **Adam** | Anpassar learning rate per vikt |
+| **Decay** | Börja stort, minska över tid |
+
+---
+
+## Sammanfattning
+
+1. **Delta = fel × responsivitet** (hur mycket lyssnar de?)
+2. Felet beräknas **en gång** i output-lagret
+3. Deltas **propageras bakåt** genom kedjeregeln
+4. **Gradient descent** — vi tar steg baserat på nuvarande lutning
+5. Olika **förlustfunktioner** ger olika värden på det initiala felet
+6. Olika **aktiveringar** ger olika derivator (ReLU > Sigmoid)
+7. **Adaptiva optimerare** (Adam) justerar learning rate smartare

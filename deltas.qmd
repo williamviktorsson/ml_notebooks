@@ -1,0 +1,240 @@
+# Loss
+
+Hittills har vi pratat främst om att vi kan beräkna en error efter att nätverket har gjort sina uppskattningar.
+
+Ett nätverk som har 4 outputs kanske har facit [0,0,1,0] och uppskattningar [0.1, 0.2, 0.6, 0.1] och därför kan vi beskriva deras error som [0.1, 0.2, -0.4, 0.1].
+
+Men låt säga att vi vill ha ett bra mått på hur fel nätverket har i snitt? Ska vi summera felen? Ska vi ta det största felet? Ska vi ta det minsta felet? Ska vi ta det genomsnittliga felet?
+
+Låt säga att vi tar genomsnittet av felen, så i det här fallet skulle det vara $(0.1 + 0.2 - 0.4 + 0.1) / 4 = 0.0$. Det är inte så bra..
+
+Så vi vill representera felen på ett sätt som inte tar ut varandra. Samtidigt vill vi att större fel ska ge ett större straff, så att nätverket kan lära sig att undvika stora fel.
+
+Det är här loss-funktionen kommer in. En funktion som tar in nätverkets uppskattningar och det faktiska facit, och ger oss en siffra som representerar hur fel nätverket är.
+
+En vanlig loss-funktion är Mean Squared Error (MSE), som beräknas som genomsnittet av kvadraten av felen. I vårt exempel skulle det vara:
+
+$$\text{MSE} = \frac{(0.1)^2 + (0.2)^2 + (-0.4)^2 + (0.1)^2}{4} = \frac{0.01 + 0.04 + 0.16 + 0.01}{4} = 0.055$$
+
+Låt oss införa lite notation: vi kallar nätverkets output (uppskattning) för $\hat{y}$ ("y-hat") och det faktiska facit (target) för $y$.
+
+En annan vanlig loss-funktion är Cross-Entropy Loss, som används för klassificeringsproblem. Den beräknas som $-\sum y \cdot \log(\hat{y})$.
+
+Dagens uppgift handlar om att först acceptera att det ni lärt er hittills är att skapa ett nätverk som använder MSE. Snart kommer ni förstå hur MSE används i det vi gjort hittills.
+
+MSE per neuron kan vi beskriva såhär:
+
+$$\text{loss}(\hat{y}) = (y - \hat{y})^2$$
+
+---
+
+Vi tar först ett steg tillbaka. Vi har ett nätverk som tar in en input som är en lista av numeriska värden, och ger oss en output som också är en lista av numeriska värden. Vi har också ett __"target"__ som är en lista av numeriska värden, som är det vi vill att nätverket ska ge oss.
+
+Nätverket har en massa vikter som det använder för att beräkna sin output.
+
+Det första lagret i nätverket tar in inputen och multiplicerar den med vikterna för det lagret, och ger oss en output. Det andra lagret tar den outputen och multiplicerar den med sina vikter, och så vidare tills vi får den slutliga outputen.
+
+Nu vill vi att nätverket ska lära sig att ge oss en output som är så nära target som möjligt. För att göra det behöver vi en funktion som kan berätta för oss hur fel nätverket är, så att vi kan justera vikterna för att minska det felet.
+
+**DET ENDA VI KAN GÖRA OCH BRYR OSS OM ATT GÖRA I DET LÄGET ÄR ATT JUSTERA VIKTERNA FÖR ATT MINSKA FELET.**
+
+Så för varje vikt $w_i$ är vi intresserad av att beräkna $\frac{\partial L}{\partial w_i}$ (där $L$ är vår loss-funktion), det vill säga hur mycket loss förändras när vi ändrar den vikten. **DET ÄR ALLT!!** Det är det enda vi bryr oss om. Det är det enda som är relevant för att justera vikterna. Att hitta lutningen av loss-funktionen i förhållande till varje vikt, och sedan justera vikterna i riktning mot den lutningen för att minska loss. Detta kallas för _gradient descent_ och det är grunden för hur neurala nätverk lär sig.
+
+En gång till alltså: Vi behöver beräkna $\frac{\partial L}{\partial w_i}$ för varje vikt $w_i$ i nätverket, så att vi kan justera vikterna i riktning mot den lutningen för att minska loss. Det är det enda som är relevant för att justera vikterna. Det är det enda som är relevant för att lära sig. Det är just nu det enda som är relevant för att förstå hur neurala nätverk fungerar.
+
+Okej.
+
+$$\frac{\partial L}{\partial w_i}$$
+
+Hur plockar vi fram den här informationen? Hur beräknar vi $\frac{\partial L}{\partial w_i}$?
+
+De funktioner vi har är:
+
+**1. Loss-funktionen** — hur fel är vi? ($L$ = loss, $\hat{y}$ = output, $y$ = target)
+
+$$L(\hat{y}) = (y - \hat{y})^2$$
+
+**2. Aktiveringsfunktionen** — sigmoid ($\sigma$) omvandlar den viktade summan $s$ till en output mellan 0 och 1:
+
+$$\hat{y}(s) = \sigma(s) = \frac{1}{1 + e^{-s}}$$
+
+**3. Den viktade summan** — $x_i$ är input nummer $i$, $w_i$ är vikten som hör till den inputen, och $b$ är bias:
+
+$$s = \sum_i x_i \cdot w_i + b = x_1 \cdot w_1 + x_2 \cdot w_2 + \ldots + x_n \cdot w_n + b$$
+
+Men vi vill ju beräkna derivatan med avseende på *en specifik* vikt $w_i$. Ur $w_i$:s perspektiv är alla andra termer konstanta, så vi kan skriva:
+
+$$s(w_i) = x_i \cdot w_i + C$$
+
+där $C$ är allt annat (alla andra vikter gånger deras inputs, plus bias).
+
+Så om vi vill beskriva vår loss som en funktion av $w_i$, så kan vi skriva:
+
+$$L(w_i) = (y - \hat{y}(s(w_i)))^2$$
+
+**BOOM!** Nu har vi loss som en funktion av $w_i$, och vi kan beräkna $\frac{\partial L}{\partial w_i}$ genom att använda kedjeregeln för derivering. **WOW!!!**
+
+Snabb påminnelse om kedjeregeln: Om vi har en funktion $f(g(x))$, så är derivatan $f'(g(x)) \cdot g'(x)$. Det vill säga, vi deriverar den yttre funktionen och multiplicerar den med derivatan av den inre funktionen.
+
+Och om vi har en sammansatt funktion i tre steg. t.ex. $f(g(h(x)))$, så är derivatan $f'(g(h(x))) \cdot g'(h(x)) \cdot h'(x)$. Det vill säga, vi deriverar den yttre funktionen och multiplicerar den med derivatan av den mellersta funktionen och multiplicerar den med derivatan av den innersta funktionen.
+
+Så vad behöver vi för att komma igång? Låt oss plocka fram derivatorna för varje funktion:
+
+$$\frac{\partial L}{\partial \hat{y}} = -2(y - \hat{y})$$
+
+$$\frac{\partial \hat{y}}{\partial s} = \sigma(s) \cdot (1 - \sigma(s))$$
+
+och eftersom $\hat{y} = \sigma(s)$, och vi redan har $\hat{y}$ sparat, kan vi skriva:
+
+$$\frac{\partial \hat{y}}{\partial s} = \hat{y} \cdot (1 - \hat{y})$$
+
+$$\frac{\partial s}{\partial w_i} = x_i$$
+
+Nu kan vi använda kedjeregeln för att beräkna $\frac{\partial L}{\partial w_i}$:
+
+$$\frac{\partial L}{\partial w_i} = \frac{\partial L}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial s} \cdot \frac{\partial s}{\partial w_i}$$
+
+$$\frac{\partial L}{\partial w_i} = -2(y - \hat{y}) \cdot \hat{y}(1 - \hat{y}) \cdot x_i$$
+
+och notera, att under träningens gång, brukar vi spara på oss en neurons output och t.ex. spara den i en variabel som vi kallar för $\hat{y}_n$ (output från neuron $n$), så att vi inte behöver beräkna $\hat{y}(s)$ varje gång vi vill beräkna $\frac{\partial L}{\partial w_i}$, utan istället kan använda $\hat{y}_n$ direkt i formeln:
+
+$$\frac{\partial L}{\partial w_i} = -2(y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_i$$
+
+Sen när vi har $\frac{\partial L}{\partial w_i}$, så kan vi justera vikten $w_i$ i riktning mot den lutningen för att minska loss och då brukar vi använda en inlärningshastighet, som är en liten positiv konstant som vi multiplicerar med $\frac{\partial L}{\partial w_i}$ för att bestämma hur mycket vi ska justera vikten $w_i$. Så den nya vikten $w_i'$ skulle vara:
+
+$$w_i' = w_i + \eta \cdot \frac{\partial L}{\partial w_i}$$
+
+vilket är detsamma som:
+
+$$w_i' = w_i + \eta \cdot \big(-2(y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_i\big)$$
+
+och den där siffran 2 kan vi också inkludera i inlärningshastigheten, så att vi inte behöver ha den där 2:an i formeln varje gång, utan istället kan ha en inlärningshastighet som är dubbelt så stor, och då skulle formeln för att justera vikten $w_i$ vara:
+
+$$w_i' = w_i + \eta \cdot (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_i$$
+
+---
+
+## Delta - varför skapar vi den?
+
+Okej, nu har vi en fungerande formel. Men titta på den en gång till. Säg att neuron $n$ har 5 vikter. Då behöver vi beräkna:
+
+$$\frac{\partial L}{\partial w_1} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_1$$
+$$\frac{\partial L}{\partial w_2} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_2$$
+$$\frac{\partial L}{\partial w_3} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_3$$
+$$\frac{\partial L}{\partial w_4} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_4$$
+$$\frac{\partial L}{\partial w_5} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_5$$
+
+Ser du det? Allt utom sista termen är **exakt samma** varje gång. Det enda som skiljer sig är vilken input vi multiplicerar med.
+
+Så vi sparar den gemensamma delen i en variabel och kallar den **delta** ($\delta$):
+
+$$\delta_n = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n)$$
+
+Detta är deltan för neuron $n$. Det är ett mått på hur fel neuronen har multiplicerat med "hur benägen den är att ändra sin output" (sigmoidens derivata). För sigmoid funktionen är derivatan störst när output är 0.5, och minskar när output närmar sig 0 eller 1. Det är alltså inte direkt ett "mått på hur osäker neuronen är", utan snarare ett mått på hur mycket vi kan förändra neuronens fel genom att justera dess vikter, bias eller förbättra dess input. Men, det är nära besläktat med osäkerhet när vi använder sigmoid som aktiveringsfunktion. De neuroner som är mest osäkra (output nära 0.5) har störst potential att minska sitt fel genom att justera sina vikter. Så de neuroner med störst fel och som är mest osäkra kommer att ha störst delta-värde. Men det är inte osäkerhet vi mäter, det är en kombination av fel och benägenhet att ändra output. Det är precis som människor! Vissa människor är väldigt säkra på sina felaktiga åsikter och är därför svåra att övertyga att ändra sig, medan andra är mer öppna för nya idéer smiley face. Men förutom "öppenhet" så är ju människor olika benägna att lyssna på olika personer också. Vissa lyssnar de inte på alls. Vissa vill de bara göra tvärtom mot vad de säger. Vi kan se det som att personer har olika "vikter" för vilka personer de lyssnar på. Så snart pratar vi lite om neuroner, precis som människor, behöver ta hänsyn till inte bara fel, benägenhet att ändra sig, utan också vilka "vikter" de har för olika inputs, för att avgöra hur de kan påverka personer i sin omgivning, jag menar neuroner i sitt nätverk glad gubbe.
+
+
+Ursäkta mitt sidetrack.. **Nu blir viktuppdateringen mycket enklare:**
+
+$$w_i' = w_i + \eta \cdot \delta_n \cdot x_i$$
+
+Vi beräknar $\delta_n$ en gång per neuron, och sedan multiplicerar vi med varje input för att få varje vikts uppdatering. Perfekt! Vi har en matematiskt snygg och korrent lösning för att justera vikterna i output-lagret.
+
+Men vänta lite.. Hur gör vi med de gömda lagren? De har inget target, så hur beräknar vi deras deltas?
+
+---
+
+## Delta i gömda lager
+
+Formeln ovan fungerar för output-lagret, för där har vi ett target att jämföra med. Men vad gör vi med en neuron i ett gömt lager? Den har inget eget target. Den har inget facit.
+
+Det den gömda neuronen däremot vet är att den skickar sin output vidare till neuroner i nästa lager. Och vi har precis beräknat delta för varje neuron i nästa lager. Varje sådant delta säger: "om mina förutsättningar hade varit lite bättre åt det här hållet, hade loss minskat."
+
+Det den gömda neuronen behöver lista ut är: åt vilket håll ska *jag* justeras för att nätverket totalt sett ska bli bättre?
+
+Och det är en direkt beräkning. Vi har egentligen bara ett val att göra. Vår output påverkar neuronerna i nästa lager, och vi vet redan vad de behöver (deras deltas). Vi vet också hur starkt vi är kopplade till var och en av dem (vikterna). Så vi beräknar helt enkelt netto-effekten:
+
+```
+      gömd neuron H
+        |       |        |
+      w=0.8   w=0.1    w=0.5
+        |       |        |
+      neuron A  neuron B  neuron C
+      δ=0.3    δ=0.0     δ=0.7
+```
+
+Neuron A säger "jag behöver hjälp åt det här hållet" ($\delta_A = 0.3$), och H är starkt kopplad till A (vikt 0.8). Neuron C säger samma sak fast ännu starkare ($\delta_C = 0.7$), och H är kopplad med vikt 0.5. Neuron B behöver ingen hjälp alls ($\delta_B = 0.0$).
+
+Netto-signalen som H tar emot:
+
+$$0.8 \cdot 0.3 + 0.1 \cdot 0.0 + 0.5 \cdot 0.7 = 0.24 + 0 + 0.35 = 0.59$$
+
+Det här talet säger åt neuronen H: "om du justerar din output åt det här hållet, så förbättras nätverket totalt sett med ungefär så här mycket." Det är allt. Det är den enda informationen H har att gå på. Det är den enda informationen H behöver för att veta åt vilket håll den ska justera sig.
+
+Okej, men kan vi uttrycka detta matematiskt? Vi vill ju beräkna $\frac{\partial L}{\partial w_i}$ för varje vikt i den gömda neuronen, precis som vi gjorde för output-lagret. Vi behöver kedjeregeln igen.
+
+Kommer du ihåg att för output-lagret hade vi tre funktioner, och att vi kunde derivera var och en?
+
+$$L(\hat{y}) = (y - \hat{y})^2 \qquad \hat{y}(s) = \sigma(s) \qquad s(w_i) = x_i \cdot w_i + C$$
+
+För det gömda lagret har vi inget target, och därmed ingen enkel loss-funktion vi kan skriva ner. Men vi behöver egentligen inte det heller. Vi behöver bara $\frac{\partial L}{\partial \hat{y}_H}$ - alltså hur mycket nätverkets totala loss förändras om vi ändrar H:s output.
+
+Och det kan vi redan räkna ut - med saker vi redan vet!
+
+Kom ihåg vad vi visade för output-lagret:
+
+$$\frac{\partial L}{\partial w_i} = \delta \cdot x_i$$
+
+Det säger: "effekten av att ändra vikt $w_i$ på loss är $\delta$ gånger inputen som hör till den vikten."
+
+Men tänk nu - vad *är* $x_i$ till en neuron i nästa lager? Det är $\hat{y}_H$! Och vad är $w_i$? Det är vikten $w_k$ som kopplar H till neuron $k$.
+
+Så vi kan vända på det. Från neuron $k$:s perspektiv, om vi ändrar dess input (alltså H:s output), hur mycket påverkas loss? Samma logik:
+
+$$\frac{\partial L}{\partial x_k} = \delta_k \cdot w_k$$
+
+Och H matar in i *alla* neuroner i nästa lager. Så den totala effekten av att ändra H:s output är summan:
+
+$$\frac{\partial L}{\partial \hat{y}_H} = \sum_k \delta_k \cdot w_k$$
+
+Där har vi det. Nu har vi $\frac{\partial L}{\partial \hat{y}_H}$, och resten av kedjan är identisk med output-lagret:
+
+$$\frac{\partial L}{\partial \hat{y}_H} = \sum_k \delta_k \cdot w_k$$
+
+$$\frac{\partial \hat{y}_H}{\partial s} = \hat{y}_H(1 - \hat{y}_H)$$
+
+$$\frac{\partial s}{\partial w_i} = x_i$$
+
+Kedjeregeln:
+
+$$\frac{\partial L}{\partial w_i} = \frac{\partial L}{\partial \hat{y}_H} \cdot \frac{\partial \hat{y}_H}{\partial s} \cdot \frac{\partial s}{\partial w_i}$$
+
+$$\frac{\partial L}{\partial w_i} = \left(\sum_k \delta_k \cdot w_k\right) \cdot \hat{y}_H(1 - \hat{y}_H) \cdot x_i$$
+
+Och precis som förut plockar vi ut den gemensamma delen som delta:
+
+$$\delta_H = \left(\sum_k \delta_k \cdot w_k\right) \cdot \hat{y}_H(1 - \hat{y}_H)$$
+
+Jämför med output-lagrets delta:
+
+| | Felsignal | $\times$ sigmoidens derivata |
+|---|---|---|
+| **Output-lager:** | $\delta = \mathbf{(y - \hat{y})}$ | $\cdot\ \hat{y}(1 - \hat{y})$ |
+| **Gömt lager:** | $\delta_H = \mathbf{\sum_k \delta_k \cdot w_k}$ | $\cdot\ \hat{y}_H(1 - \hat{y}_H)$ |
+
+Samma struktur. Det enda som skiljer sig är var "felsignalen" kommer ifrån. I output-lagret kommer den från target. I det gömda lagret kommer den från nästa lagers deltas, via kedjeregeln.
+
+Och notera: vi behövde aldrig skriva loss som en funktion av $\hat{y}_H$. Vi behövde bara kedjeregeln och det faktum att vi redan beräknat delta för nästa lager. Det är just det som gör backpropagation effektivt - vi återanvänder beräkningar vi redan gjort.
+
+Viktuppdateringen är sedan som vanligt:
+
+$$w_i' = w_i + \eta \cdot \delta_H \cdot x_i$$
+
+Och $\delta_H$ skickas vidare bakåt till lagret innan, så att de neuronerna kan göra exakt samma beräkning.
+
+Det är hela backpropagation:
+
+1. Beräkna $\delta$ för output-lagret (vi har target)
+2. Skicka $\delta$ bakåt och beräkna $\delta$ för varje gömt lager (via $\sum \delta \cdot w$)
+3. Uppdatera varje vikt: $w_i' = w_i + \eta \cdot \delta \cdot x_i$
+
+Samma formel, samma princip, lager för lager bakåt genom nätverket.

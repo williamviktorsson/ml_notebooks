@@ -1,0 +1,409 @@
+---
+title: "Loss, Derivator & Delta"
+format:
+  revealjs:
+    theme: dracula
+    transition: slide
+    background-transition: fade
+    controls: true
+    controls-layout: bottom-right
+    controls-tutorial: true
+    hash-type: number
+    hash: true
+    incremental: true
+    fragment-in-url: true
+    html-math-method: mathjax
+    include-in-header:
+      text: |
+        <style>
+        .center-xy {
+            margin: 0;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
+        </style>
+---
+
+## Vad vi vet hittills
+
+- Vi kan beräkna en **error** efter att nätverket gjort sina uppskattningar.
+- Facit: `[0, 0, 1, 0]`
+- Output: `[0.1, 0.2, 0.6, 0.1]`
+- Error: `[0.1, 0.2, -0.4, 0.1]`
+
+---
+
+## Problemet med genomsnitt
+
+- Genomsnittet av felen:
+
+. . .
+
+$$\frac{0.1 + 0.2 + (-0.4) + 0.1}{4} = 0.0$$
+
+- Positiva och negativa fel tar ut varandra!
+- Vi behöver en bättre metod.
+
+---
+
+## Loss-funktionen
+
+- En funktion som tar nätverkets output och facit, och ger oss **ett enda tal** som representerar hur fel nätverket är.
+- Vi vill att:
+  - Fel inte ska ta ut varandra
+  - Större fel ska ge större straff
+
+---
+
+## Mean Squared Error (MSE)
+
+Lite notation: vi kallar nätverkets output för $\hat{y}$ och facit (target) för $y$.
+
+. . .
+
+$$\text{MSE} = \frac{1}{n}\sum(y - \hat{y})^2$$
+
+. . .
+
+Vårt exempel:
+
+$$\frac{(0.1)^2 + (0.2)^2 + (-0.4)^2 + (0.1)^2}{4} = 0.055$$
+
+. . .
+
+Per neuron skriver vi loss-funktionen $L$ som:
+
+$$L(\hat{y}) = (y - \hat{y})^2$$
+
+---
+
+## Det enda vi bryr oss om
+
+- Vi har ett nätverk med massa vikter ($w_i$ = vikt nummer $i$).
+- Vi vill justera vikterna för att minska loss.
+
+. . .
+
+**Det enda vi behöver veta:**
+
+$$\frac{\partial L}{\partial w_i}$$
+
+. . .
+
+Hur mycket förändras loss $L$ om vi ändrar vikt $w_i$?
+
+---
+
+## Gradient Descent
+
+- Beräkna $\frac{\partial L}{\partial w_i}$ för varje vikt
+- Justera vikterna i riktning mot lutningen
+- Upprepa!
+
+. . .
+
+Det är **allt**. Det är hela grunden för hur neurala nätverk lär sig.
+
+---
+
+## Tre funktioner
+
+Vi har tre funktioner som kopplar ihop vikt → output → loss:
+
+. . .
+
+**1. Loss:** $L(\hat{y}) = (y - \hat{y})^2$
+
+. . .
+
+**2. Sigmoid** ($\sigma$) — omvandlar den viktade summan $s$ till output:
+
+$\hat{y}(s) = \sigma(s) = \frac{1}{1 + e^{-s}}$
+
+. . .
+
+**3. Viktad summa** — $x_i$ = input nr $i$, $w_i$ = vikt nr $i$, $b$ = bias:
+
+$s = x_1 \cdot w_1 + x_2 \cdot w_2 + \ldots + x_n \cdot w_n + b$
+
+. . .
+
+Ur en enskild vikt $w_i$:s perspektiv (resten är konstant):
+
+$s(w_i) = x_i \cdot w_i + C$
+
+---
+
+## Loss som funktion av vikten
+
+$$L(w_i) = (y - \hat{y}(s(w_i)))^2$$
+
+. . .
+
+**BOOM!** Loss som en funktion av $w_i$.
+
+Nu kan vi använda **kedjeregeln** för att beräkna $\frac{\partial L}{\partial w_i}$.
+
+---
+
+## Kedjeregeln — påminnelse
+
+- Om $h(x) = f(g(x))$, då är $h'(x) = f'(g(x)) \cdot g'(x)$
+
+. . .
+
+- Tre steg: $f(g(h(x)))$
+  - $\rightarrow f'(g(h(x))) \cdot g'(h(x)) \cdot h'(x)$
+
+. . .
+
+Vi deriverar utifrån och in, steg för steg.
+
+---
+
+## Derivatorna
+
+$$\frac{\partial L}{\partial \hat{y}} = -2(y - \hat{y})$$
+
+. . .
+
+$$\frac{\partial \hat{y}}{\partial s} = \sigma(s) \cdot (1 - \sigma(s))$$
+
+. . .
+
+Och eftersom $\hat{y} = \sigma(s)$ (som vi redan har sparat):
+
+$$= \hat{y} \cdot (1 - \hat{y})$$
+
+. . .
+
+$$\frac{\partial s}{\partial w_i} = x_i$$
+
+---
+
+## Kedjeregeln i aktion
+
+$$\frac{\partial L}{\partial w_i} = \frac{\partial L}{\partial \hat{y}} \cdot \frac{\partial \hat{y}}{\partial s} \cdot \frac{\partial s}{\partial w_i}$$
+
+. . .
+
+$$\frac{\partial L}{\partial w_i} = -2(y - \hat{y}) \cdot \hat{y}(1 - \hat{y}) \cdot x_i$$
+
+. . .
+
+(Vi absorberar $-2$ i learning rate, och skriver $\hat{y}_n$ för neuron $n$:s sparade output:)
+
+$$\frac{\partial L}{\partial w_i} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_i$$
+
+---
+
+## Viktuppdatering
+
+$$w_i' = w_i + \eta \cdot (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_i$$
+
+. . .
+
+Där $\eta$ är inlärningshastigheten (learning rate).
+
+---
+
+## Varför delta?
+
+Säg att neuron $n$ har 5 vikter:
+
+$$\frac{\partial L}{\partial w_1} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_1$$
+$$\frac{\partial L}{\partial w_2} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_2$$
+$$\frac{\partial L}{\partial w_3} = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n) \cdot x_3$$
+
+. . .
+
+Ser du det? Allt utom sista termen är **exakt samma**.
+
+---
+
+## Delta ($\delta$)
+
+Vi sparar den gemensamma delen:
+
+$$\delta_n = (y - \hat{y}_n) \cdot \hat{y}_n(1 - \hat{y}_n)$$
+
+. . .
+
+- **Fel** $\times$ **sigmoidens derivata**
+- Hur mycket vi kan förändra neuronens fel genom att justera dess vikter
+
+. . .
+
+Viktuppdateringen blir:
+
+$$w_i' = w_i + \eta \cdot \delta_n \cdot x_i$$
+
+---
+
+## Vad mäter delta?
+
+- Neuroner med output nära **0.5** har störst derivata — de är mest responsiva
+- Neuroner nära **0** eller **1** har derivata nära 0 — de är "låsta"
+
+. . .
+
+- $\delta$ kombinerar **felet** med **benägenheten att ändra sig**
+- Stort fel + responsiv neuron = stort $\delta$
+
+---
+
+## Analogin
+
+- Precis som människor!
+  - Vissa är väldigt säkra på sina felaktiga åsikter och svåra att övertyga
+  - Andra är öppna för nya idéer
+
+. . .
+
+- Neuroner "lyssnar" olika mycket på olika inputs (vikterna)
+- Människor "lyssnar" olika mycket på olika källor (vänner, experter, sociala medier)
+- De behöver ta hänsyn till fel, benägenhet att ändra sig, *och* vilka inputs de lyssnar på
+
+---
+
+## Men vänta — gömda lager?
+
+- Formeln fungerar för output-lagret (vi har target)
+- Men en gömd neuron har **inget target**
+- Inget facit att jämföra med
+
+. . .
+
+Hur beräknar vi $\delta$ för gömda lager?
+
+---
+
+## Vad den gömda neuronen vet
+
+- Den skickar sin output vidare till neuroner i nästa lager
+- Vi har redan beräknat $\delta$ för varje neuron i nästa lager
+
+. . .
+
+Varje $\delta$ säger: *"om mina förutsättningar hade varit lite bättre åt det här hållet, hade loss minskat."*
+
+---
+
+## Netto-effekten
+
+```
+      gömd neuron H
+        |       |        |
+      w=0.8   w=0.1    w=0.5
+        |       |        |
+      neuron A  neuron B  neuron C
+      δ=0.3    δ=0.0     δ=0.7
+```
+
+. . .
+
+$$0.8 \cdot 0.3 + 0.1 \cdot 0.0 + 0.5 \cdot 0.7 = 0.59$$
+
+. . .
+
+"Om du justerar din output åt det här hållet, förbättras nätverket med ~0.59"
+
+---
+
+## Matematiken — nyckeln
+
+Kommer du ihåg från output-lagret?
+
+$$\frac{\partial L}{\partial w_i} = \delta \cdot x_i$$
+
+. . .
+
+Tänk nu: vad *är* $x_i$ till en neuron i nästa lager?
+
+. . .
+
+Det är $\hat{y}_H$! Den gömda neuronen H:s output.
+
+---
+
+## Vända på perspektivet
+
+Från neuron $k$:s perspektiv — om vi ändrar dess input $x_k$ (som är H:s output):
+
+$$\frac{\partial L}{\partial x_k} = \delta_k \cdot w_k$$
+
+. . .
+
+H matar in i *alla* neuroner i nästa lager:
+
+$$\frac{\partial L}{\partial \hat{y}_H} = \sum_k \delta_k \cdot w_k$$
+
+---
+
+## Tre derivator — gömt lager
+
+$$\frac{\partial L}{\partial \hat{y}_H} = \sum_k \delta_k \cdot w_k$$
+
+. . .
+
+$$\frac{\partial \hat{y}_H}{\partial s} = \hat{y}_H(1 - \hat{y}_H)$$
+
+. . .
+
+$$\frac{\partial s}{\partial w_i} = x_i$$
+
+---
+
+## Kedjeregeln igen
+
+$$\frac{\partial L}{\partial w_i} = \left(\sum_k \delta_k \cdot w_k\right) \cdot \hat{y}_H(1 - \hat{y}_H) \cdot x_i$$
+
+. . .
+
+Delta för det gömda lagret:
+
+$$\delta_H = \left(\sum_k \delta_k \cdot w_k\right) \cdot \hat{y}_H(1 - \hat{y}_H)$$
+
+---
+
+## Jämförelse
+
+| | Felsignal | $\times$ sigmoidens derivata |
+|---|---|---|
+| **Output:** | $\delta = (y - \hat{y})$ | $\cdot\ \hat{y}(1 - \hat{y})$ |
+| **Gömt:** | $\delta_H = \sum_k \delta_k \cdot w_k$ | $\cdot\ \hat{y}_H(1 - \hat{y}_H)$ |
+
+. . .
+
+**Samma struktur!** Enda skillnaden: var felsignalen kommer ifrån.
+
+---
+
+## Viktuppdatering — samma som vanligt
+
+$$w_i' = w_i + \eta \cdot \delta_H \cdot x_i$$
+
+. . .
+
+Och $\delta_H$ skickas vidare bakåt till lagret innan...
+
+---
+
+## Hela Backpropagation
+
+1. Beräkna $\delta$ för output-lagret (vi har target)
+
+. . .
+
+2. Skicka $\delta$ bakåt och beräkna $\delta$ för varje gömt lager (via $\sum \delta \cdot w$)
+
+. . .
+
+3. Uppdatera varje vikt: $w_i' = w_i + \eta \cdot \delta \cdot x_i$
+
+. . .
+
+**Samma formel, samma princip, lager för lager bakåt genom nätverket.**

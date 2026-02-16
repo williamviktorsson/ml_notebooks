@@ -44,8 +44,8 @@ class Neuron:
         Args:
             num_inputs: Antal inkommande kopplingar
         """
-        self.weights = [random.uniform(-1, 1) for _ in range(num_inputs)]
-        self.bias = random.uniform(-1, 1)
+        self.weights = [random.uniform(-0.5, 0.5) for _ in range(num_inputs)]
+        self.bias = random.uniform(-0.5, 0.5)
 
     def predict(self, inputs):
         """
@@ -121,7 +121,7 @@ class NeuralNetwork:
                 self._train_single(inputs, target, learning_rate)
 
             # Logga felet ibland
-            if epoch % 1000 == 0 or epoch == epochs - 1:
+            if epoch % 10 == 0 or epoch == epochs - 1:
                 mse = self._calculate_mse(training_inputs, training_targets)
                 print(f"Epoch {epoch}, MSE: {mse:.6f}")
 
@@ -206,18 +206,18 @@ if __name__ == "__main__":
     print("=== Tränar neuralt nätverk för XOR ===\n")
 
     # XOR-problemet - kan inte lösas av en enskild perceptron!
-    X_train = [[0, 0], [0, 1], [1, 0], [1, 1]]
-    y_train = [[0], [1], [1], [0]]
+    X_train = [[0, 0,0], [0, 1,0], [1, 1,1]]
+    y_train = [[1,0,0],[0,1,0],[0,0,1]]
 
-    # Skapa nätverk: 2 inputs, 2 dolda neuroner, 1 output
-    nn = NeuralNetwork(layer_sizes=[2, 2, 1])
+    # Skapa nätverk: 3 inputs, 2 + 3 dolda neuroner, 3 output
+    nn = NeuralNetwork(layer_sizes=[3,3,2,3])
 
     print("Startar träning...")
-    nn.train(X_train, y_train, epochs=10000, learning_rate=0.5)
+    nn.train(X_train, y_train, epochs=5000, learning_rate=0.5)
 
     print("\n=== Testresultat ===")
     for inputs, target in zip(X_train, y_train):
         prediction = nn.predict(inputs)
-        rounded = round(prediction[0])
-        status = "✓" if rounded == target[0] else "✗"
-        print(f"Input: {inputs} -> Gissning: {prediction[0]:.4f} (≈{rounded}), Facit: {target[0]} {status}")
+        rounded = np.argmax(prediction)
+        status = "✓" if rounded == np.argmax(target) else "✗"
+        print(f"Input: {inputs} -> Gissning: {prediction} (≈{rounded}), Facit: {target} {status}")
